@@ -3,12 +3,8 @@
 
 ESP32Board board;
 
-#if defined(P_LORA_SCLK)
-  static SPIClass spi;
-  RADIO_CLASS radio = new Module(P_LORA_NSS, P_LORA_DIO_9, P_LORA_RESET, P_LORA_BUSY, spi);
-#else
-  RADIO_CLASS radio = new Module(P_LORA_NSS, P_LORA_DIO_9, P_LORA_RESET, P_LORA_BUSY);
-#endif
+static SPIClass spi;
+RADIO_CLASS radio = new Module(P_LORA_NSS, P_LORA_DIO_9, P_LORA_RESET, P_LORA_BUSY, spi);
 
 WRAPPER_CLASS radio_driver(radio, board);
 
@@ -26,22 +22,23 @@ SensorManager sensors;
 #endif
 
 #ifdef RF_SWITCH_TABLE
+// EoRa-Hub 900TB RF switch (E80-900M2213S)
 static const uint32_t rfswitch_dios[Module::RFSWITCH_MAX_PINS] = {
   RADIOLIB_LR11X0_DIO5,
   RADIOLIB_LR11X0_DIO6,
-  RADIOLIB_NC,
+  RADIOLIB_LR11X0_DIO7,
   RADIOLIB_NC,
   RADIOLIB_NC
 };
 
 static const Module::RfSwitchMode_t rfswitch_table[] = {
-  { LR11x0::MODE_STBY,   {LOW, LOW} },
-  { LR11x0::MODE_RX,     {LOW, HIGH} },
-  { LR11x0::MODE_TX,     {HIGH, HIGH} },
-  { LR11x0::MODE_TX_HP,  {HIGH, LOW} },
-  { LR11x0::MODE_TX_HF,  {LOW, LOW} },
-  { LR11x0::MODE_GNSS,   {LOW, LOW} },
-  { LR11x0::MODE_WIFI,   {LOW, LOW} },
+  { LR11x0::MODE_STBY,   {LOW,  LOW,  LOW} },
+  { LR11x0::MODE_RX,     {LOW,  HIGH, LOW} },
+  { LR11x0::MODE_TX,     {HIGH, HIGH, LOW} },
+  { LR11x0::MODE_TX_HP,  {HIGH, LOW,  LOW} },
+  { LR11x0::MODE_TX_HF,  {LOW,  LOW,  LOW} },
+  { LR11x0::MODE_GNSS,   {LOW,  LOW,  HIGH} },
+  { LR11x0::MODE_WIFI,   {LOW,  LOW,  LOW} },
   END_OF_MODE_TABLE,
 };
 #endif
@@ -50,18 +47,13 @@ bool radio_init() {
   fallback_clock.begin();
   rtc_clock.begin(Wire);
 
-  radio.reset();
-  delay(10);
-
 #ifdef LR11X0_DIO3_TCXO_VOLTAGE
   float tcxo = LR11X0_DIO3_TCXO_VOLTAGE;
 #else
-  float tcxo = 1.8f;
+  float tcxo = 1.6f;
 #endif
 
-#if defined(P_LORA_SCLK)
   spi.begin(P_LORA_SCLK, P_LORA_MISO, P_LORA_MOSI, P_LORA_NSS);
-#endif
 
   int status = radio.begin(
       LORA_FREQ,
@@ -70,7 +62,7 @@ bool radio_init() {
       LORA_CR,
       RADIOLIB_LR11X0_LORA_SYNC_WORD_PRIVATE,
       LORA_TX_POWER,
-      8,        // preamble detector (���������� ��������)
+      16,
       tcxo
   );
 
@@ -92,21 +84,6 @@ bool radio_init() {
 #endif
 
   return true;
-}
-
-uint32_t radio_get_rng_seed() {
-  return radio.random(0x7FFFFFFF);
-}
-
-void radio_set_params(float freq, float bw, uint8_t sf, uint8_t cr) {
-  radio.setFrequency(freq);
-  radio.setSpreadingFactor(sf);
-  radio.setBandwidth(bw);
-  radio.setCodingRate(cr);
-}
-
-void radio_set_tx_power(uint8_t dbm) {
-  radio.setOutputPower(dbm);
 }
 
 mesh::LocalIdentity radio_new_identity() {
