@@ -55,7 +55,6 @@ public:
     CustomLR1121 *r = (CustomLR1121 *)_radio;
     float freq = r->getFreqMHz();
 
-    // Полный AGC reset по аналогии с LR2021
     r->standby(RADIOLIB_LR11X0_STANDBY_RC, true);
     r->calibrate(RADIOLIB_LR11X0_CALIBRATE_ALL);
     r->setFrequency(freq);
