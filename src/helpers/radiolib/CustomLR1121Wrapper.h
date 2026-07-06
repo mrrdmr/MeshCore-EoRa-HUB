@@ -4,6 +4,10 @@
 #include "RadioLibWrappers.h"
 #include "LR11x0Reset.h"
 
+#ifndef USE_LR1121
+#define USE_LR1121
+#endif
+
 class CustomLR1121Wrapper : public RadioLibWrapper {
 public:
   CustomLR1121Wrapper(CustomLR1121& radio, mesh::MainBoard& board) : RadioLibWrapper(radio, board) { }
