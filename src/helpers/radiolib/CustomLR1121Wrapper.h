@@ -54,10 +54,8 @@ public:
     if (dbm > 22) dbm = 22;
     if (dbm < -17) dbm = -17;
     if (dbm <= 14) {
-        radio.setRfSwitchMode(LR11x0::MODE_TX);
         r->setOutputPower(dbm);
     } else {
-        radio.setRfSwitchMode(LR11x0::MODE_TX_HP);
         r->setOutputPower(dbm, true, 48);
     }
   }
