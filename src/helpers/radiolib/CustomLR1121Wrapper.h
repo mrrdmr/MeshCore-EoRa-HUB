@@ -51,6 +51,13 @@ public:
   }
   void setTxPower(int8_t dbm) {
     auto* r = (CustomLR1121*)_radio;
-    r->setOutputPower(dbm, true, 48);
+    if (dbm > 22) {
+        dbm = 22;
+    }
+    if (dbm <= 14) {
+        r->setOutputPower(dbm);
+    } else {
+        r->setOutputPower(dbm, true, 48);
+    }
   }
 };
