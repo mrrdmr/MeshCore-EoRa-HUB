@@ -49,4 +49,8 @@ public:
   bool getRxBoostedGainMode() const override {
     return ((CustomLR1121 *)_radio)->getRxBoostedGainMode();
   }
+  void setTxPower(int8_t dbm) {
+    auto* r = (CustomLR1121*)_radio;
+    r->setOutputPower(dbm, true, 48);
+  }
 };
