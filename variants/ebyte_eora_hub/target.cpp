@@ -12,16 +12,13 @@ ESP32RTCClock fallback_clock;
 AutoDiscoverRTCClock rtc_clock(fallback_clock);
 SensorManager sensors;
 
-#ifdef DISPLAY_CLASS
   DISPLAY_CLASS display;
   MomentaryButton user_btn(PIN_USER_BTN, 1000, true);
-#endif
 
 #ifndef LORA_CR
   #define LORA_CR 5
 #endif
 
-#ifdef RF_SWITCH_TABLE
 // EoRa-Hub 900TB RF switch (E80-900M2213S)
 static const uint32_t rfswitch_dios[Module::RFSWITCH_MAX_PINS] = {
   RADIOLIB_LR11X0_DIO5,
@@ -41,17 +38,12 @@ static const Module::RfSwitchMode_t rfswitch_table[] = {
   { LR11x0::MODE_WIFI,   {LOW,  LOW,  LOW} },
   END_OF_MODE_TABLE,
 };
-#endif
 
 bool radio_init() {
   fallback_clock.begin();
   rtc_clock.begin(Wire);
 
-#ifdef LR11X0_DIO3_TCXO_VOLTAGE
   float tcxo = LR11X0_DIO3_TCXO_VOLTAGE;
-#else
-  float tcxo = 1.6f;
-#endif
 
   spi.begin(P_LORA_SCLK, P_LORA_MISO, P_LORA_MOSI, P_LORA_NSS);
 
@@ -74,14 +66,11 @@ bool radio_init() {
 
   radio.setCRC(2);
   radio.explicitHeader();
-
-#ifdef RF_SWITCH_TABLE
   radio.setRfSwitchTable(rfswitch_dios, rfswitch_table);
-#endif
 
-#ifdef RX_BOOSTED_GAIN
+  #ifdef RX_BOOSTED_GAIN
   radio.setRxBoostedGainMode(RX_BOOSTED_GAIN);
-#endif
+  #endif
 
   return true;
 }
